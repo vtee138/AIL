@@ -1,4 +1,8 @@
-"""Lệnh chạy ngắn cho mô hình Ridge F4. Mã mô hình nằm trong model.py."""
+"""Lệnh chạy tương thích: `python run.py` gọi cùng hàm với `python model.py`.
+
+Toàn bộ phần tạo đặc trưng, huấn luyện và đánh giá nằm trong model.py.
+File này chỉ giữ lệnh cũ hoạt động, không chứa thêm một mô hình khác.
+"""
 
 from model import main
 
