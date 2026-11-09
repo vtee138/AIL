@@ -3,8 +3,8 @@
 - Nguồn: [AQI in Hanoi 2022–2025 trên Kaggle](https://www.kaggle.com/datasets/phungdinhdat/aqi-in-hanoi-2022-2025), tác giả `phungdinhdat`.
 - Bản dữ liệu: `versions/1`.
 - Các tệp gốc được lưu nguyên trong `raw/2022.csv`, `raw/2023.csv`, `raw/2024.csv`, `raw/2025.csv`.
-- `hanoi_pm25_weather.csv` được tạo từ bốn tệp gốc bằng `python collect.py` ở thư mục AIL. Script chỉ chọn các cột cần cho bài Ridge F4, loại giờ trùng, tạo trục giờ liên tục và nội suy tối đa 3 giờ.
-- `python collect.py --download` tải lại đúng phiên bản nguồn từ Kaggle trước khi tạo CSV. Lệnh này cần kết nối mạng; chạy `python collect.py` với các CSV gốc có sẵn thì không cần mạng.
+- `python collect.py` kiểm tra bốn CSV gốc đã có; `python collect.py --download` tải lại đúng phiên bản nguồn từ Kaggle (cần mạng).
+- `python preprocess.py` tạo `hanoi_pm25_weather.csv` từ bốn tệp gốc. Script chọn các cột cần cho bài Ridge F4, loại giờ trùng, tạo trục giờ liên tục và nội suy tối đa 3 giờ.
 
 ## Kiểm tra tệp nguồn
 

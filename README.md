@@ -6,24 +6,29 @@ Xem [báo cáo quá trình thực hiện](REPORT.md) để đọc phần thu th�
 
 Nội dung thuyết trình phần thu thập dữ liệu: [slides/data_collection.md](slides/data_collection.md).
 
-## Thu thập và tạo dataset
+## Chạy toàn bộ quy trình
 
 Yêu cầu Python 3.10 trở lên. Bốn CSV nguồn theo năm đã có sẵn trong `data/raw/`. Mở terminal trong thư mục `AIL` rồi chạy:
 
 ```bash
 python -m pip install -r requirements.txt
 python collect.py
-python run.py
+python preprocess.py
+python eda.py
+python model.py
 ```
 
-`collect.py` tạo lại `data/hanoi_pm25_weather.csv` hoàn toàn từ các CSV trong AIL. Nếu muốn tải lại dữ liệu gốc từ Kaggle, chạy `python collect.py --download` (cần mạng). Nguồn, phiên bản, mã SHA-256 và giải thích các cột nằm trong [data/SOURCE.md](data/SOURCE.md).
+`collect.py` kiểm tra bốn CSV nguồn đã có trong AIL. Nếu muốn tải lại đúng phiên bản từ Kaggle, chạy `python collect.py --download` (cần mạng). `preprocess.py` tạo lại `data/hanoi_pm25_weather.csv` từ các CSV nguồn. `eda.py` xuất bảng thống kê và biểu đồ; `model.py` huấn luyện, đánh giá Ridge F4. Có thể dùng `python run.py` như lệnh ngắn thay cho `python model.py`.
+
+Nguồn, phiên bản, mã SHA-256 và giải thích các cột nằm trong [data/SOURCE.md](data/SOURCE.md).
 
 ## Chạy mô hình
 
-Chương trình in RMSE, MAE và R² theo từng mốc dự đoán. Hai tệp được tạo trong `output/`:
+`model.py` in RMSE, MAE và R² theo từng mốc dự đoán. Các tệp được tạo trong `output/`:
 
 - `metrics.csv`: bảng chỉ số đánh giá.
 - `predictions.csv`: giá trị thực và dự đoán cho từng thời điểm của tập kiểm tra.
+- `eda/`: bảng thống kê và biểu đồ PM2.5 từ `eda.py`.
 
 ## Dữ liệu và phương pháp
 
@@ -40,8 +45,11 @@ AIL/
 ├── data/raw/2022.csv ... 2025.csv # dữ liệu nguồn theo năm
 ├── data/hanoi_pm25_weather.csv    # dữ liệu dùng cho mô hình
 ├── data/SOURCE.md                 # nguồn và mô tả dữ liệu
-├── collect.py                     # thu thập và tạo dataset
-├── run.py                         # tạo đặc trưng, huấn luyện, đánh giá
+├── collect.py                     # kiểm tra / tải CSV nguồn
+├── preprocess.py                  # làm sạch và tạo dataset
+├── eda.py                         # thống kê và vẽ biểu đồ
+├── model.py                       # tạo đặc trưng, huấn luyện, đánh giá
+├── run.py                         # lệnh ngắn gọi model.py
 ├── REPORT.md                      # báo cáo quá trình thực hiện
 ├── requirements.txt
 └── output/                        # được tạo khi chạy

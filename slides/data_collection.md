@@ -25,11 +25,11 @@
 
 - **Biến mục tiêu:** PM2.5 (µg/m³).
 - **Thông tin đầu vào:** thời gian quan trắc; nhiệt độ, độ ẩm, gió, áp suất, mưa, mây và UV.
-- `collect.py` đọc 4 CSV gốc và tạo `data/hanoi_pm25_weather.csv` gồm **9 cột**.
+- `collect.py` kiểm tra hoặc tải 4 CSV gốc; `preprocess.py` tạo `data/hanoi_pm25_weather.csv` gồm **9 cột**.
 - Dataset sau khi đưa về trục giờ liên tục có **30.360 mốc giờ**; cách xử lý giờ trùng và giờ thiếu được trình bày ở phần *Tiền xử lý*.
 
 **Lời trình bày (khoảng 30 giây)**
 
 > Mục tiêu của bài là dự đoán nồng độ PM2.5. Vì dùng bộ đặc trưng F4, nhóm chỉ giữ thời gian, PM2.5 và bảy chỉ số thời tiết; các chất ô nhiễm khác trong nguồn gốc không được đưa vào mô hình. Script thu thập tạo ra một CSV riêng cho bài toán. Phần tiếp theo giải thích cách xử lý bản ghi trùng và khoảng thời gian bị thiếu.
 
-**Gợi ý minh họa:** đặt bốn tệp CSV theo năm bên trái, một mũi tên qua `collect.py`, và tệp CSV 9 cột bên phải.
+**Gợi ý minh họa:** đặt bốn tệp CSV theo năm bên trái, một mũi tên qua `preprocess.py`, và tệp CSV 9 cột bên phải.

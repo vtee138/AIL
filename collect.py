@@ -1,32 +1,17 @@
-"""Tạo dữ liệu PM2.5 + thời tiết từ bốn CSV gốc.
+"""Kiểm tra hoặc tải bốn CSV nguồn về thư mục AIL.
 
-python collect.py             # dùng data/raw/*.csv đi kèm dự án
-python collect.py --download  # tải lại bản nguồn từ Kaggle trước khi xử lý
+python collect.py             # kiểm tra các CSV có sẵn
+python collect.py --download  # tải lại phiên bản nguồn từ Kaggle
 """
 
 import argparse
 import shutil
 from pathlib import Path
 
-import pandas as pd
-
-
 HERE = Path(__file__).resolve().parent
 RAW_DIR = HERE / "data" / "raw"
-OUTPUT = HERE / "data" / "hanoi_pm25_weather.csv"
 YEARS = [2022, 2023, 2024, 2025]
 SOURCE = "phungdinhdat/aqi-in-hanoi-2022-2025/versions/1"
-COLUMNS = {
-    "Local Time": "time",
-    "PM25": "pm25",
-    "Temperature": "temp",
-    "Relative Humidity": "rh",
-    "Wind Speed": "wind",
-    "Pressure": "pressure",
-    "Precipitation": "precip",
-    "Clouds": "clouds",
-    "UV Index": "uv",
-}
 
 
 def download_raw():
@@ -39,28 +24,16 @@ def download_raw():
         shutil.copy2(source_dir / f"{year}.csv", RAW_DIR / f"{year}.csv")
 
 
-def build_dataset():
-    """Chọn cột F4, khôi phục trục giờ và xử lý khoảng trống ngắn."""
+def check_raw():
+    """Báo số hàng của các tệp nguồn, chưa thay đổi dữ liệu."""
     files = [RAW_DIR / f"{year}.csv" for year in YEARS]
     missing = [str(path) for path in files if not path.exists()]
     if missing:
         raise FileNotFoundError(f"Thiếu CSV nguồn: {missing}. Chạy python collect.py --download")
-
-    parts = [pd.read_csv(path, usecols=list(COLUMNS)) for path in files]
-    data = pd.concat(parts, ignore_index=True).rename(columns=COLUMNS)
-    data["time"] = pd.to_datetime(data["time"])
-    data = data.sort_values("time").drop_duplicates("time", keep="last")
-    data = data.set_index("time")
-    data = data[list(COLUMNS.values())[1:]]
-
-    # Một hàng luôn tương ứng một giờ; giữ các khoảng trống dài dưới dạng NaN.
-    hours = pd.date_range(data.index.min(), data.index.max(), freq="h", name="time")
-    data = data.reindex(hours)
-    data = data.interpolate(limit=3, limit_area="inside")
-
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    data.to_csv(OUTPUT, date_format="%Y-%m-%d %H:%M:%S", lineterminator="\n")
-    print(f"Created {OUTPUT.name}: {len(data)} hourly rows, {data.pm25.isna().sum()} missing PM2.5 hours")
+    for path in files:
+        with path.open(encoding="utf-8") as file:
+            rows = sum(1 for _ in file) - 1  # trừ hàng tiêu đề
+        print(f"{path.name}: {rows} rows")
 
 
 if __name__ == "__main__":
@@ -69,4 +42,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.download:
         download_raw()
-    build_dataset()
+    check_raw()
