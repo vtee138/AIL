@@ -1,26 +1,26 @@
 # Nội dung thay thế cho 4 slide Tiền xử lý
 
-Các slide dưới đây khớp với `preprocess.py` và `data/hanoi_pm25_weather.csv` của AIL. Giữ tông xanh đang dùng, nhưng bỏ ảnh chụp bảng/code quá nhỏ và các hình trang trí che nội dung. Mỗi slide chỉ cần một ý chính.
+Các slide dưới đây bắt đầu từ `data/collected_pm25_weather.csv` của phần Data Collection và kết thúc ở `data/hanoi_pm25_weather.csv` của phần Preprocessing. Giữ tông xanh đang dùng, nhưng bỏ ảnh chụp bảng/code quá nhỏ và các hình trang trí che nội dung. Mỗi slide chỉ cần một ý chính.
 
-## Slide 1 — Gộp CSV và chọn cột
+## Slide 1 — Chuẩn hóa CSV đã thu thập
 
-**Tiêu đề trên slide:** GỘP CSV VÀ CHỌN CỘT
+**Tiêu đề trên slide:** CHUẨN HÓA TÊN CỘT VÀ THỜI GIAN
 
 **Nội dung trên slide**
 
-- Đọc bốn tệp nguồn: `2022.csv`, `2023.csv`, `2024.csv`, `2025.csv`.
-- Chỉ giữ **thời gian, PM2.5 và 7 biến thời tiết** cho bài toán Ridge F4.
-- Đổi tên cột thống nhất: `Local Time → time`, `PM25 → pm25`, `Temperature → temp`, `Relative Humidity → rh`.
-- Các biến thời tiết còn lại: `wind`, `pressure`, `precip`, `clouds`, `uv`.
+- Đầu vào: `collected_pm25_weather.csv` với **30.341 hàng, 9 cột tên gốc**.
+- Đổi tên cột: `Local Time → time`, `PM25 → pm25`, `Temperature → temp`, `Relative Humidity → rh`.
+- Chuyển `time` từ chuỗi sang kiểu ngày giờ; các cột khí tượng còn lại cũng dùng tên ngắn.
+- Bước chọn cột và gộp bốn năm đã hoàn thành ở *Data Collection*.
 
 **Đoạn mã nếu muốn minh họa (dùng chữ có thể chỉnh sửa, không chụp màn hình):**
 
 ```python
-parts = [pd.read_csv(path, usecols=list(COLUMNS)) for path in files]
-data = pd.concat(parts, ignore_index=True).rename(columns=COLUMNS)
+data = pd.read_csv(INPUT).rename(columns=COLUMNS)
+data["time"] = pd.to_datetime(data["time"])
 ```
 
-**Lời nói:** Bốn tệp theo năm có nhiều cột hơn nhu cầu của bài này. Chúng ta chỉ đọc PM2.5, thời gian và thời tiết, rồi đổi sang tên ngắn để các bước sau dễ theo dõi.
+**Lời nói:** CSV từ phần thu thập đã chọn đúng chín cột nhưng vẫn giữ tên và giá trị gốc. Ở bước tiền xử lý, nhóm đổi tên cột và chuyển thời gian sang kiểu ngày giờ để có thể sắp xếp và tạo trục giờ.
 
 ## Slide 2 — Trục thời gian liên tục
 
@@ -29,7 +29,7 @@ data = pd.concat(parts, ignore_index=True).rename(columns=COLUMNS)
 **Nội dung trên slide**
 
 ```text
-30.341 bản ghi gốc  →  bỏ 5 bản ghi trùng  →  30.336 giờ có dữ liệu
+30.341 hàng đã thu thập → bỏ 5 bản ghi trùng  →  30.336 giờ có dữ liệu
 30.336 giờ          →  thêm 24 giờ còn thiếu →  30.360 mốc giờ liên tục
 ```
 

@@ -8,14 +8,15 @@ Quy trình gồm bốn bước: **thu thập dữ liệu → tiền xử lý →
 
 ## 1. Data collection — Thu thập dữ liệu
 
-Nguồn là bộ [AQI in Hanoi 2022–2025 trên Kaggle](https://www.kaggle.com/datasets/phungdinhdat/aqi-in-hanoi-2022-2025), phiên bản 1, gồm bốn tệp CSV theo năm. AIL lưu nguyên các tệp tại `data/raw/2022.csv` đến `data/raw/2025.csv`. `collect.py` kiểm tra tệp nguồn hoặc tải lại từ Kaggle; `preprocess.py` tạo `data/hanoi_pm25_weather.csv` với các cột cần cho F4. Mã SHA-256 và mô tả từng cột nằm trong `data/SOURCE.md`.
+Nguồn là bộ [AQI in Hanoi 2022–2025 trên Kaggle](https://www.kaggle.com/datasets/phungdinhdat/aqi-in-hanoi-2022-2025), phiên bản 1, gồm bốn tệp CSV theo năm. AIL lưu nguyên các tệp tại `data/raw/2022.csv` đến `data/raw/2025.csv`. `collect.py` gộp bốn năm và chỉ chọn thời gian, PM2.5, bảy cột khí tượng để tạo `data/collected_pm25_weather.csv`. CSV này có **30.341 hàng và 9 cột tên gốc**; chưa đổi tên, loại trùng, tạo lưới giờ hoặc nội suy. `preprocess.py` xử lý CSV đó ở giai đoạn tiếp theo. Mã SHA-256 và mô tả từng cột nằm trong `data/SOURCE.md`.
 
 | Thành phần | Nội dung |
 |---|---|
 | Địa điểm | Hà Nội |
-| Độ phân giải | 1 hàng mỗi giờ, theo giờ địa phương |
+| Tần suất dự kiến | 1 quan trắc mỗi giờ địa phương; CSV thu thập vẫn có giờ trùng và giờ thiếu |
 | Khoảng thời gian | 13/01/2022 00:00 đến 30/06/2025 23:00 |
-| Quy mô sau khi đưa về trục giờ liên tục | 30.360 hàng |
+| CSV sau Data Collection | 30.341 hàng, 9 cột gốc |
+| CSV sau Preprocessing | 30.360 mốc giờ, 9 cột chuẩn hóa |
 | Biến cần dự đoán | `pm25` — nồng độ PM2.5 (µg/m³) |
 | Biến thời tiết | `temp`, `rh`, `wind`, `pressure`, `precip`, `clouds`, `uv` |
 
@@ -23,7 +24,7 @@ Tệp dữ liệu AIL có 9 cột: `time`, `pm25` và 7 biến thời tiết. C�
 
 ## 2. Tiền xử lý dữ liệu
 
-1. **Chuẩn hóa cấu trúc:** `preprocess.py` đổi tên các cột cần dùng sang tên ngắn, chuyển `Local Time` thành thời gian, sắp xếp theo thời gian và loại các bản ghi trùng giờ. Dữ liệu nguồn có 5 bản ghi trùng thời gian; tệp dùng cho mô hình không còn giờ trùng.
+1. **Chuẩn hóa cấu trúc:** `preprocess.py` đọc `data/collected_pm25_weather.csv`, đổi tên cột sang tên ngắn, chuyển `Local Time` thành thời gian, sắp xếp và loại các bản ghi trùng giờ. CSV thu thập có 5 bản ghi trùng thời gian; CSV sau tiền xử lý không còn giờ trùng.
 2. **Tạo trục giờ liên tục:** Một khoảng thiếu 24 giờ vào ngày 31/12/2023 được giữ đúng vị trí trên trục thời gian. Nhờ đó, phép tạo độ trễ theo hàng vẫn tương ứng với số giờ thực tế.
 3. **Xử lý giá trị thiếu:** `preprocess.py` nội suy tối đa 3 giờ liên tiếp và giữ các giờ còn thiếu dưới dạng ô trống. Trong tệp dùng cho mô hình còn 21 giờ thiếu ở ngày 31/12/2023, ở cả PM2.5 và các biến thời tiết. Khi tạo dữ liệu học, các hàng có đặc trưng hoặc nhãn thiếu được loại bỏ.
 4. **Tạo đặc trưng F4:** Từ PM2.5 và thời tiết, tạo giá trị tại thời điểm hiện tại, các độ trễ và thống kê cửa sổ; bổ sung đặc trưng giờ, thứ, ngày trong năm, cuối tuần và ngày lễ Việt Nam. Tất cả đặc trưng của hàng thời điểm `t` chỉ dùng dữ liệu tại `t` hoặc trước `t`.
@@ -112,4 +113,4 @@ python eda.py
 python model.py
 ```
 
-`preprocess.py` tạo lại CSV dùng cho mô hình từ bốn CSV nguồn. `eda.py` ghi bảng thống kê và biểu đồ vào `output/eda/`. `model.py` ghi bảng đánh giá vào `output/metrics.csv` và giá trị thực/dự đoán theo giờ vào `output/predictions.csv`. Các tệp trong `output/` được tạo lại mỗi lần chạy.
+`collect.py` tạo CSV 9 cột chưa làm sạch từ bốn tệp nguồn. `preprocess.py` tạo CSV theo giờ dùng cho mô hình từ CSV đã thu thập. `eda.py` ghi bảng thống kê và biểu đồ vào `output/eda/`. `model.py` ghi bảng đánh giá vào `output/metrics.csv` và giá trị thực/dự đoán theo giờ vào `output/predictions.csv`. Các tệp trong `output/` được tạo lại mỗi lần chạy.

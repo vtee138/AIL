@@ -1,8 +1,8 @@
-"""Bước 2: tạo một bảng theo giờ cho bài toán dự đoán PM2.5.
+"""Bước 2: tiền xử lý CSV đã chọn cột ở bước Data Collection.
 
 Chạy: python preprocess.py
 
-Đầu vào: data/raw/2022.csv ... data/raw/2025.csv.
+Đầu vào: data/collected_pm25_weather.csv do collect.py tạo.
 Đầu ra: data/hanoi_pm25_weather.csv, gồm time, pm25 và 7 biến thời tiết.
 Script chỉ xử lý dữ liệu; nó không huấn luyện mô hình.
 """
@@ -13,11 +13,10 @@ import pandas as pd
 
 
 HERE = Path(__file__).resolve().parent
-RAW_DIR = HERE / "data" / "raw"
+INPUT = HERE / "data" / "collected_pm25_weather.csv"
 OUTPUT = HERE / "data" / "hanoi_pm25_weather.csv"
-YEARS = [2022, 2023, 2024, 2025]
-# Khóa là tên cột trong dữ liệu Kaggle, giá trị là tên ngắn dùng trong AIL.
-# Chỉ chọn PM2.5 và thời tiết vì F4 không dùng các chất ô nhiễm khác.
+# Việc chọn cột đã hoàn tất ở collect.py; ở đây chỉ chuẩn hóa tên cột.
+# Khóa là tên gốc, giá trị là tên ngắn dùng trong EDA và mô hình.
 COLUMNS = {
     "Local Time": "time",
     "PM25": "pm25",
@@ -32,16 +31,12 @@ COLUMNS = {
 
 
 def main():
-    """Gộp CSV, giữ một hàng mỗi giờ, nội suy ngắn rồi lưu bảng sạch."""
-    # Dừng sớm với thông báo rõ ràng nếu chưa có đủ dữ liệu nguồn.
-    files = [RAW_DIR / f"{year}.csv" for year in YEARS]
-    missing = [str(path) for path in files if not path.exists()]
-    if missing:
-        raise FileNotFoundError(f"Missing raw CSV: {missing}. Run python collect.py --download")
+    """Đổi tên, giữ một hàng mỗi giờ, nội suy ngắn rồi lưu bảng sạch."""
+    if not INPUT.exists():
+        raise FileNotFoundError(f"Missing {INPUT.name}. Run python collect.py first")
 
-    # usecols tránh nạp các cột không cần như AQI hay các chất ô nhiễm khác.
-    parts = [pd.read_csv(path, usecols=list(COLUMNS)) for path in files]
-    data = pd.concat(parts, ignore_index=True).rename(columns=COLUMNS)
+    # CSV đầu vào vẫn có tên cột gốc, hàng trùng và khoảng giờ bị thiếu.
+    data = pd.read_csv(INPUT).rename(columns=COLUMNS)
     # Local Time là giờ địa phương của Hà Nội. Dùng nó làm chỉ số thời gian.
     data["time"] = pd.to_datetime(data["time"])
     # Nếu một giờ xuất hiện nhiều lần, giữ bản ghi cuối cùng của giờ đó.

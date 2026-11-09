@@ -17,19 +17,19 @@
 
 **Nguồn ghi ở chân slide:** [Kaggle — AQI in Hanoi 2022–2025](https://www.kaggle.com/datasets/phungdinhdat/aqi-in-hanoi-2022-2025), `phungdinhdat`, phiên bản 1.
 
-## Slide 2 — Dữ liệu dùng cho bài toán PM2.5
+## Slide 2 — CSV sau Data Collection
 
-**Tiêu đề:** Chọn PM2.5 và các biến thời tiết
+**Tiêu đề:** Chọn cột cho bài toán PM2.5
 
 **Nội dung trên slide**
 
 - **Biến mục tiêu:** PM2.5 (µg/m³).
 - **Thông tin đầu vào:** thời gian quan trắc; nhiệt độ, độ ẩm, gió, áp suất, mưa, mây và UV.
-- `collect.py` kiểm tra hoặc tải 4 CSV gốc; `preprocess.py` tạo `data/hanoi_pm25_weather.csv` gồm **9 cột**.
-- Dataset sau khi đưa về trục giờ liên tục có **30.360 mốc giờ**; cách xử lý giờ trùng và giờ thiếu được trình bày ở phần *Tiền xử lý*.
+- `collect.py` tạo `data/collected_pm25_weather.csv`: **30.341 hàng, 9 cột tên gốc**.
+- CSV này **chưa xử lý** giờ trùng, giờ thiếu hay đổi tên cột. Đó là việc của phần *Tiền xử lý*.
 
 **Lời trình bày (khoảng 30 giây)**
 
-> Mục tiêu của bài là dự đoán nồng độ PM2.5. Vì dùng bộ đặc trưng F4, nhóm chỉ giữ thời gian, PM2.5 và bảy chỉ số thời tiết; các chất ô nhiễm khác trong nguồn gốc không được đưa vào mô hình. Script thu thập tạo ra một CSV riêng cho bài toán. Phần tiếp theo giải thích cách xử lý bản ghi trùng và khoảng thời gian bị thiếu.
+> Mục tiêu của bài là dự đoán nồng độ PM2.5. Vì dùng bộ đặc trưng F4, nhóm chỉ giữ thời gian, PM2.5 và bảy chỉ số thời tiết; các chất ô nhiễm khác trong nguồn gốc không được đưa vào mô hình. CSV của bước thu thập vẫn giữ dữ liệu thô của những cột này. Phần tiếp theo mới xử lý bản ghi trùng và khoảng thời gian bị thiếu.
 
-**Gợi ý minh họa:** đặt bốn tệp CSV theo năm bên trái, một mũi tên qua `preprocess.py`, và tệp CSV 9 cột bên phải.
+**Gợi ý minh họa:** `4 CSV gốc → collect.py → collected_pm25_weather.csv (30.341 hàng, chưa làm sạch)`.

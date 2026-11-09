@@ -1,13 +1,14 @@
-"""Bước 1: thu thập dữ liệu nguồn, chưa làm sạch hay tạo đặc trưng.
+"""Bước 1: gộp và chọn cột từ CSV nguồn, chưa tiền xử lý.
 
-python collect.py             # kiểm tra các CSV có sẵn
+python collect.py             # tạo data/collected_pm25_weather.csv
 python collect.py --download  # tải lại phiên bản nguồn từ Kaggle
 
-Đầu ra của bước này là bốn tệp data/raw/{năm}.csv. Các bước sau chỉ đọc
-những tệp này, nên có thể chạy lại dự án khi không có kết nối mạng.
+Bốn tệp data/raw/{năm}.csv được giữ nguyên. CSV mới chỉ chọn 9 cột gốc;
+giữ nguyên thứ tự hàng, tên cột, giá trị trống và bản ghi trùng.
 """
 
 import argparse
+import csv
 import shutil
 from pathlib import Path
 
@@ -15,9 +16,15 @@ from pathlib import Path
 # `python AIL/collect.py` vẫn tìm đúng dữ liệu dù chạy từ thư mục khác.
 HERE = Path(__file__).resolve().parent
 RAW_DIR = HERE / "data" / "raw"
+OUTPUT = HERE / "data" / "collected_pm25_weather.csv"
 YEARS = [2022, 2023, 2024, 2025]
 # Ghim phiên bản 1 để lần tải sau không vô tình lấy một phiên bản dữ liệu mới.
 SOURCE = "phungdinhdat/aqi-in-hanoi-2022-2025/versions/1"
+# Tên cột ở đây vẫn là tên gốc trong CSV Kaggle. Đổi tên là việc của preprocess.py.
+KEEP_COLUMNS = [
+    "Local Time", "PM25", "Temperature", "Relative Humidity", "Wind Speed",
+    "Pressure", "Precipitation", "Clouds", "UV Index",
+]
 
 
 def download_raw():
@@ -31,17 +38,32 @@ def download_raw():
         shutil.copy2(source_dir / f"{year}.csv", RAW_DIR / f"{year}.csv")
 
 
-def check_raw():
-    """Báo số hàng của từng CSV để xác nhận đã thu thập đủ bốn năm."""
+def collect_dataset():
+    """Gộp bốn CSV theo thứ tự năm và sao chép nguyên giá trị của 9 cột."""
     files = [RAW_DIR / f"{year}.csv" for year in YEARS]
     missing = [str(path) for path in files if not path.exists()]
     if missing:
         raise FileNotFoundError(f"Thiếu CSV nguồn: {missing}. Chạy python collect.py --download")
-    for path in files:
-        # Mỗi bản ghi nằm trên một dòng; dòng đầu là tên cột, không phải dữ liệu.
-        with path.open(encoding="utf-8") as file:
-            rows = sum(1 for _ in file) - 1  # trừ hàng tiêu đề
-        print(f"{path.name}: {rows} rows")
+
+    # csv.DictReader/DictWriter giữ giá trị dưới dạng chuỗi, không tự nội suy,
+    # sắp xếp hoặc loại trùng. Bước này chỉ chọn cột và gộp hàng.
+    with OUTPUT.open("w", encoding="utf-8", newline="") as target:
+        writer = csv.DictWriter(target, fieldnames=KEEP_COLUMNS, lineterminator="\n")
+        writer.writeheader()
+        total = 0
+        for path in files:
+            with path.open(encoding="utf-8-sig", newline="") as source:
+                reader = csv.DictReader(source)
+                absent = set(KEEP_COLUMNS) - set(reader.fieldnames or [])
+                if absent:
+                    raise ValueError(f"{path.name} thiếu cột: {sorted(absent)}")
+                count = 0
+                for row in reader:
+                    writer.writerow({name: row[name] for name in KEEP_COLUMNS})
+                    count += 1
+            total += count
+            print(f"{path.name}: {count} rows")
+    print(f"Created {OUTPUT.name}: {total} raw rows, {len(KEEP_COLUMNS)} columns")
 
 
 if __name__ == "__main__":
@@ -51,4 +73,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.download:
         download_raw()
-    check_raw()
+    collect_dataset()
