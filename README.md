@@ -6,6 +6,7 @@ Xem [báo cáo quá trình thực hiện](REPORT.md) để đọc phần thu th�
 
 Nội dung thuyết trình phần thu thập dữ liệu: [slides/data_collection.md](slides/data_collection.md).
 Nội dung đã chỉnh cho phần tiền xử lý: [slides/preprocessing.md](slides/preprocessing.md).
+Lời thuyết trình phần EDA: [slides/eda_speaker_notes.md](slides/eda_speaker_notes.md).
 
 ## Chạy toàn bộ quy trình
 
