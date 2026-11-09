@@ -5,6 +5,7 @@ Bài thực hành Machine Learning áp dụng: dùng dữ liệu quan trắc the
 Xem [báo cáo quá trình thực hiện](REPORT.md) để đọc phần thu thập dữ liệu, tiền xử lý, EDA và kết quả dự đoán.
 
 Nội dung thuyết trình phần thu thập dữ liệu: [slides/data_collection.md](slides/data_collection.md).
+Nội dung đã chỉnh cho phần tiền xử lý: [slides/preprocessing.md](slides/preprocessing.md).
 
 ## Chạy toàn bộ quy trình
 
