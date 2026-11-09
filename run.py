@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 HERE = Path(__file__).resolve().parent
 HORIZONS = [1, 6, 12, 24, 48]  # dự đoán sau từng này giờ
 WEATHER = ["temp", "rh", "wind", "pressure", "precip", "clouds", "uv"]
-ALPHA = 1554.6366680730962  # giá trị Ridge F4 đã chọn trong DAP
+ALPHA = 1554.6366680730962  # hệ số điều chuẩn cố định cho bài thực hành
 
 
 def make_features(data):

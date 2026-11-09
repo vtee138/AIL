@@ -2,13 +2,13 @@
 
 ## Dự đoán PM2.5 tại Hà Nội bằng Ridge Regression
 
-**Mục tiêu.** Từ các quan trắc có tại một thời điểm, dự đoán nồng độ PM2.5 sau 1, 6, 12, 24 và 48 giờ. Đây là bài thực hành Machine Learning áp dụng dành cho thuyết trình sinh viên. Dự án AIL được tách từ DAP và chỉ sử dụng **mô hình Ridge với bộ đặc trưng F4**.
+**Mục tiêu.** Từ các quan trắc có tại một thời điểm, dự đoán nồng độ PM2.5 sau 1, 6, 12, 24 và 48 giờ. Đây là bài thực hành Machine Learning áp dụng dành cho thuyết trình sinh viên, chỉ sử dụng **mô hình Ridge với bộ đặc trưng F4**.
 
 Quy trình gồm bốn bước: **thu thập dữ liệu → tiền xử lý → khám phá dữ liệu (EDA) → dự đoán và đánh giá**.
 
 ## 1. Data collection — Thu thập dữ liệu
 
-Nguồn ban đầu là bộ [AQI in Hanoi 2022–2025 trên Kaggle](https://www.kaggle.com/datasets/phungdinhdat/aqi-in-hanoi-2022-2025), gồm các tệp CSV theo năm. DAP đã tải và làm sạch nguồn này. AIL trích riêng các cột cần cho F4 vào `data/hanoi_pm25_weather.csv`, vì vậy có thể chạy AIL mà không cần tải lại dữ liệu hoặc cài đặt mã DAP.
+Nguồn là bộ [AQI in Hanoi 2022–2025 trên Kaggle](https://www.kaggle.com/datasets/phungdinhdat/aqi-in-hanoi-2022-2025), phiên bản 1, gồm bốn tệp CSV theo năm. AIL lưu nguyên các tệp tại `data/raw/2022.csv` đến `data/raw/2025.csv`. Script `collect.py` đọc bốn tệp đó và tạo `data/hanoi_pm25_weather.csv` với các cột cần cho F4. Có thể chạy `python collect.py` từ dữ liệu đi kèm mà không cần mạng; `python collect.py --download` tải lại bản nguồn từ Kaggle. Mã SHA-256 và mô tả từng cột nằm trong `data/SOURCE.md`.
 
 | Thành phần | Nội dung |
 |---|---|
@@ -23,9 +23,9 @@ Tệp dữ liệu AIL có 9 cột: `time`, `pm25` và 7 biến thời tiết. C�
 
 ## 2. Tiền xử lý dữ liệu
 
-1. **Chuẩn hóa cấu trúc:** DAP đổi tên các cột cần dùng sang tên ngắn, chuyển `Local Time` thành thời gian, sắp xếp theo thời gian và loại các bản ghi trùng giờ. Dữ liệu nguồn có 5 bản ghi trùng thời gian; tệp AIL không còn giờ trùng.
+1. **Chuẩn hóa cấu trúc:** `collect.py` đổi tên các cột cần dùng sang tên ngắn, chuyển `Local Time` thành thời gian, sắp xếp theo thời gian và loại các bản ghi trùng giờ. Dữ liệu nguồn có 5 bản ghi trùng thời gian; tệp dùng cho mô hình không còn giờ trùng.
 2. **Tạo trục giờ liên tục:** Một khoảng thiếu 24 giờ vào ngày 31/12/2023 được giữ đúng vị trí trên trục thời gian. Nhờ đó, phép tạo độ trễ theo hàng vẫn tương ứng với số giờ thực tế.
-3. **Xử lý giá trị thiếu:** Bước làm sạch của DAP chỉ nội suy các khoảng trống ngắn, tối đa 3 giờ. Trong tệp AIL còn 21 giờ thiếu ở ngày 31/12/2023, ở cả PM2.5 và các biến thời tiết. Khi tạo dữ liệu học, các hàng có đặc trưng hoặc nhãn thiếu được loại bỏ.
+3. **Xử lý giá trị thiếu:** `collect.py` nội suy tối đa 3 giờ liên tiếp và giữ các giờ còn thiếu dưới dạng ô trống. Trong tệp dùng cho mô hình còn 21 giờ thiếu ở ngày 31/12/2023, ở cả PM2.5 và các biến thời tiết. Khi tạo dữ liệu học, các hàng có đặc trưng hoặc nhãn thiếu được loại bỏ.
 4. **Tạo đặc trưng F4:** Từ PM2.5 và thời tiết, tạo giá trị tại thời điểm hiện tại, các độ trễ và thống kê cửa sổ; bổ sung đặc trưng giờ, thứ, ngày trong năm, cuối tuần và ngày lễ Việt Nam. Tất cả đặc trưng của hàng thời điểm `t` chỉ dùng dữ liệu tại `t` hoặc trước `t`.
 5. **Chuẩn hóa thang đo:** `StandardScaler` được đặt trong pipeline cùng Ridge. Bộ chuẩn hóa được `fit` trên tập huấn luyện rồi áp dụng cho tập kiểm tra, tránh dùng thống kê của tập kiểm tra khi huấn luyện.
 
@@ -79,7 +79,7 @@ Tại mỗi thời điểm `t`, chương trình tạo 5 nhãn: PM2.5 tại `t+1`
 
 Khoảng đệm 48 giờ bảo đảm nhãn `t+48` của tập huấn luyện vẫn nằm trong năm 2024. Dù đầu vào kiểm tra kết thúc ngày 28/06, nhãn cuối cùng của mốc 48 giờ vẫn nằm trong dữ liệu đến 30/06/2025. Đây là chia tập theo thời gian, phù hợp với bài toán dự báo.
 
-Mô hình sử dụng `Ridge(alpha=1554.6367)`, là tham số Ridge F4 đã được chọn trong DAP. AIL không tối ưu lại tham số bằng tập kiểm tra. Ridge là hồi quy tuyến tính có điều chuẩn: nó giảm độ lớn các hệ số để mô hình ổn định hơn khi có nhiều đặc trưng liên quan nhau.
+Mô hình sử dụng `Ridge(alpha=1554.6367)` như một hệ số điều chuẩn cố định cho bài thực hành. Không tối ưu tham số bằng tập kiểm tra. Ridge là hồi quy tuyến tính có điều chuẩn: nó giảm độ lớn các hệ số để mô hình ổn định hơn khi có nhiều đặc trưng liên quan nhau.
 
 ### 4.2. Kết quả trên tập kiểm tra
 
@@ -91,7 +91,7 @@ Mô hình sử dụng `Ridge(alpha=1554.6367)`, là tham số Ridge F4 đã đư
 | 24 giờ | 4.296 | 32,674 | 22,230 | 0,297 |
 | 48 giờ | 4.296 | 33,663 | 23,194 | 0,230 |
 
-**RMSE** nhấn mạnh sai số lớn; **MAE** là độ lệch tuyệt đối trung bình; **R²** đo mức độ giải thích biến thiên của nhãn trên tập kiểm tra. Cả RMSE và MAE tăng khi mốc dự đoán xa hơn, còn R² giảm. Điều này cho thấy dự đoán dài hạn khó hơn trong thí nghiệm này. Kết quả hơi khác bảng DAP vì AIL loại các nhãn huấn luyện vượt qua ranh giới năm 2025.
+**RMSE** nhấn mạnh sai số lớn; **MAE** là độ lệch tuyệt đối trung bình; **R²** đo mức độ giải thích biến thiên của nhãn trên tập kiểm tra. Cả RMSE và MAE tăng khi mốc dự đoán xa hơn, còn R² giảm. Điều này cho thấy dự đoán dài hạn khó hơn trong thí nghiệm này.
 
 ### 4.3. Giới hạn và hướng phát triển
 
@@ -106,7 +106,8 @@ Trong thư mục `AIL`, chạy:
 
 ```bash
 python -m pip install -r requirements.txt
+python collect.py
 python run.py
 ```
 
-Mã nguồn nằm trong `run.py`. Chương trình ghi bảng đánh giá vào `output/metrics.csv` và giá trị thực/dự đoán theo giờ vào `output/predictions.csv`. Các tệp trong `output/` được tạo lại mỗi lần chạy.
+`collect.py` tạo lại CSV dùng cho mô hình từ bốn CSV nguồn. `run.py` ghi bảng đánh giá vào `output/metrics.csv` và giá trị thực/dự đoán theo giờ vào `output/predictions.csv`. Các tệp trong `output/` được tạo lại mỗi lần chạy.
